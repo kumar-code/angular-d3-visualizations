@@ -15,223 +15,198 @@ export class BarChartComponent implements OnInit {
 
     ngOnInit() {
 
-        var margin = { top: 20, right: 50, bottom: 80, left: 30}, 
-                       width = 500 - margin.left - margin.right,  
-                       height = 400 - margin.top - margin.bottom;
-            
-        // append the svg object to the body of the page
-        var svg = d3.select("#my_dataviz")
-            .append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom)
-            .append("g") .attr("transform", "translate(" + margin.left + "," + margin.top + ")");         
+      var colors = d3.scaleOrdinal(d3.schemeCategory10);
 
-            var data = { "nodes": [
-                {
-                  "id": 1,
-                  "name": "Naruto-ujamaki"
-                },
-                {
-                  "id": 2,
-                  "name": "saske-uchiha"
-                },
-                {
-                  "id": 3,
-                  "name": "sakura-albenia"
-                },
-                {
-                  "id": 4,
-                  "name": "lili-brok-lee"
-                },
-                {
-                  "id": 5,
-                  "name": "yellow-flash"
-                },
-                {
-                  "id": 6,
-                  "name": "kakashi-of-leave"
-                },
-                {
-                  "id": 7,
-                  "name": "madara-uchiha"
-                },
-                {
-                  "id": 8,
-                  "name": "minta-silver-flash"
-                },
-                {
-                  "id": 9,
-                  "name": "danzo-the-evil"
-                },
-                {
-                  "id": 10,
-                  "name": "Jasmiine"
-                }
-              ],
-              "links": [
-            
-                {
-                  "source": 1,
-                  "target": 2
-                },
-                {
-                  "source": 1,
-                  "target": 5
-                },
-                {
-                  "source": 1,
-                  "target": 6
-                },
-            
-                {
-                  "source": 2,
-                  "target": 3
-                },
-                        {
-                  "source": 2,
-                  "target": 7
-                }
-                ,
-            
-                {
-                  "source": 3,
-                  "target": 4
-                },
-                 {
-                  "source": 8,
-                  "target": 3
-                }
-                ,
-                {
-                  "source": 4,
-                  "target": 5
-                }
-                ,
-            
-                {
-                  "source": 4,
-                  "target": 9
-                }
-              ]
-            };
-
-            // Read dummy data
-          //  d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/data_network.json", function( data) {
-            
-                // List of node names
-                var allNodes = data.nodes.map(function(d){ return d.name })
-            
-                // A linear scale to position the nodes on the X axis
-                var x = d3.scalePoint().range([0, width]).domain(allNodes)
-            
-                // Add the circle for the nodes
-                var nodes = svg.selectAll("mynodes")
-                                  .data(data.nodes).enter()
-                                  .append("circle")
-                                    .attr("cx", function(d){ return(x(d.name))})
-                                    .attr("cy", height-30).attr("r", 8)
-                                    .style("fill", "#69b3a2")
-            
-                // And give them a label
-                var labels = svg.selectAll("mylabels").data(data.nodes).enter().append("text")
-                                  .attr("x", 0)
-                                  .attr("y", 0)
-                                  .text(function(d){ return(d.name)} )
-                                  .style("text-anchor", "start")
-                                  .attr("transform", function(d){ return( "translate(" + (x(d.name)) + "," + (height-10) + ")rotate(60)")})
-                               // .style("font-size", 16)
-            
-                // Add links between nodes. Here is the tricky part.
-                // In my input data, links are provided between nodes -id-, NOT between node names.
-                // So I have to do a link between this id and the name
-                var idToNode = {};
-                data.nodes.forEach(function (n) { idToNode[n.id] = n; });
-                // Cool, now if I do idToNode["2"].name I've got the name of the node with id 2
-            
-                // Add the links
-                var links = svg.selectAll('mylinks').data(data.links).enter().append('path')
-                .attr('d', function (d) {
-                    const start = x(idToNode[d.source].name)    // X position of start node on the X axis
-                    const end = x(idToNode[d.target].name)      // X position of end node
-                    return ['M', start, height-30,    // the arc starts at the coordinate x=start, y=height-30 (where the starting node is)
-                    'A',                            // This means we're gonna build an elliptical arc
-                    (start - end)/2, ',',    // Next 2 lines are the coordinates of the inflexion point. Height of this point is proportional with start - end distance
-                    (start - end)/2, 0, 0, ',',
-                    start < end ? 1 : 0, end, ',', height-30] // We always want the arc on top. So if end is before start, putting 0 here turn the arc upside down.
-                    .join(' ');
-                }).style("fill", "none").attr("stroke", "black")
-            
-                // Add the highlighting functionality
-                nodes.on('mouseover', function (d) { // Highlight the nodes: every node is green except of him
-                    nodes.style('fill', "#B8B8B8")
-                    d3.select(this).style('fill', 'firebrick')
-                    // Highlight the connections
-                    links              
-                          .style('stroke', function (arcd) { 
-                              return  arcd.source === d.id  ? 'firebrick' : 'none';})
-                          .style('stroke-width', function (arcd) {
-                              return arcd.source === d.id ? 4 : 1;})      
-                          .attr("stroke-dasharray", function(arcd) {
-                                return  arcd.source === d.id  ? this.getTotalLength() : 0;})
-                          .attr("stroke-dashoffset", function(arcd) 
-                                { return  arcd.source === d.id  ? this.getTotalLength() : 0;})
-                          // reveal the arcs   
-                          .transition()
-                          .duration(1000)
-                          .attr("stroke-dashoffset", 0)
-                    })
-
-                    .on('mouseout', function (d) {
-                    nodes.style('fill', "#69b3a2")
-                    links
-                        .style('stroke', 'black')
-                        .style('stroke-width', '1')
-                    })
-
-
-                    labels.on('mouseover', function (d) { // Highlight the nodes: every node is green except of him
-                      nodes.style('fill', "#B8B8B8")
-                      d3.select(this).style('fill', 'firebrick')
-
-                      
-                      // Highlight the connections
-                      links              
-                            .style('stroke', function (arcd) { 
-                                return  arcd.source === d.id  ? 'firebrick' : 'none';})
-                            .style('stroke-width', function (arcd) {
-                                return arcd.source === d.id ? 4 : 1;})      
-                            .attr("stroke-dasharray", function(arcd) {
-                                  return  arcd.source === d.id  ? this.getTotalLength() : 0;})
-                            .attr("stroke-dashoffset", function(arcd) 
-                                  { return  arcd.source === d.id  ? this.getTotalLength() : 0;})
-                            // reveal the arcs   
-                            .transition()
-                            .duration(1000)
-                            .attr("stroke-dashoffset", 0)
-                      })
+      var svg = d3.select("svg"),
+          width = +svg.attr("width"),
+          height = +svg.attr("height"),
+          node,
+          link;
   
-                      .on('mouseout', function (d) {
-                            labels.style('fill', "#69b3a2")
-                            links.style('stroke', 'black').style('stroke-width', '1')
-                      })
-            //})
-            
-            
-            // text hover nodes
-            svg
-                .append("text")
-                .attr("text-anchor", "middle")
-                .style("fill", "#B8B8B8")
-                .style("font-size", "17px")
-                .attr("x", 150)
-                .attr("y", 10)
-                .html("Hover over nodes to view the dependency relation")
+      svg.append('defs').append('marker')
+          // .attrs({'id':'arrowhead',
+          //     'viewBox':'-0 -5 10 10',
+          //     'refX':13,
+          //     'refY':0,
+          //     'orient':'auto',
+          //     'markerWidth':13,
+          //     'markerHeight':13,
+          //     'xoverflow':'visible'})
+          .append('svg:path')
+          .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+          .attr('fill', '#999')
+          .style('stroke','none');
+  
+      var simulation = d3.forceSimulation()
+          .force("link", d3.forceLink().id(function (d) {return d.id;}).distance(100).strength(1))
+          .force("charge", d3.forceManyBody())
+          .force("center", d3.forceCenter(width / 2, height / 2));
+  
 
-          
-    }
+        let graph = {
+          "nodes": [
+            {
+              "name": "Peter",
+              "label": "Person",
+              "id": 1
+            },
+            {
+              "name": "Michael",
+              "label": "Person",
+              "id": 2
+            },
+            {
+              "name": "Neo4j",
+              "label": "Database",
+              "id": 3
+            },
+            {
+              "name": "Graph Database",
+              "label": "Database",
+              "id": 4
+            }
+          ],
+          "links": [
+            {
+              "source": 1,
+              "target": 2,
+              "type": "KNOWS",
+              "since": 2010
+            },
+            {
+              "source": 1,
+              "target": 3,
+              "type": "FOUNDED"
+            },
+            {
+              "source": 2,
+              "target": 3,
+              "type": "WORKS_ON"
+            },
+            {
+              "source": 3,
+              "target": 4,
+              "type": "IS_A"
+            }
+          ]
+        }
+
+          let links = graph.links;
+          let nodes = graph.nodes;
+
+          link = svg.selectAll(".link")
+          .data(links)
+          .enter()
+          .append("line")
+          .attr("class", "link")
+          .attr('marker-end','url(#arrowhead)')
+
+          link.append("title")
+          .text(function (d) {return d.type;});
+
+          const edgepaths = svg.selectAll(".edgepath")
+            .data(links)
+            .enter()
+            .append('path')
+            // .attrs({
+            //     'class': 'edgepath',
+            //     'fill-opacity': 0,
+            //     'stroke-opacity': 0,
+            //     'id': function (d, i) {return 'edgepath' + i}
+            // })
+            .style("pointer-events", "none");
+
+            const edgelabels = svg.selectAll(".edgelabel")
+            .data(links)
+            .enter()
+            .append('text')
+            .style("pointer-events", "none")
+            // .attrs({
+            //     'class': 'edgelabel',
+            //     'id': function (d, i) {return 'edgelabel' + i},
+            //     'font-size': 10,
+            //     'fill': '#aaa'
+            // });
+
+            edgelabels.append('textPath')
+            .attr('xlink:href', function (d, i) {return '#edgepath' + i})
+            .style("text-anchor", "middle")
+            .style("pointer-events", "none")
+            .attr("startOffset", "50%")
+            .text(function (d) {return d.type});
+
+            node = svg.selectAll(".node")
+            .data(nodes)
+            .enter()
+            .append("g")
+            .attr("class", "node")
+            .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    //.on("end", dragended)
+            );
+
+            node.append("circle")
+            .attr("r", 5)
+            .style("fill", function (d, i) {return colors(i);})
+
+        node.append("title")
+            .text(function (d) {return d.id;});
+
+        node.append("text")
+            .attr("dy", -3)
+            .text(function (d) {return d.name+":"+d.label;});
+
+        simulation
+            .nodes(nodes)
+            .on("tick", ticked);
+
+        simulation.force("link")
+            .links(links);
+
+            function ticked() {
+              link
+                  .attr("x1", function (d) {return d.source.x;})
+                  .attr("y1", function (d) {return d.source.y;})
+                  .attr("x2", function (d) {return d.target.x;})
+                  .attr("y2", function (d) {return d.target.y;});
+      
+              node
+                  .attr("transform", function (d) {return "translate(" + d.x + ", " + d.y + ")";});
+      
+              edgepaths.attr('d', function (d) {
+                  return 'M ' + d.source.x + ' ' + d.source.y + ' L ' + d.target.x + ' ' + d.target.y;
+              });
+      
+              edgelabels.attr('transform', function (d) {
+                  if (d.target.x < d.source.x) {
+                      var bbox = this.getBBox();
+      
+                      const rx = bbox.x + bbox.width / 2;
+                      const ry = bbox.y + bbox.height / 2;
+                      return 'rotate(180 ' + rx + ' ' + ry + ')';
+                  }
+                  else {
+                      return 'rotate(0)';
+                  }
+              });
+          }
+            function dragstarted(d) {
+              if (!d3.event.active) simulation.alphaTarget(0.3).restart()
+              d.fx = d.x;
+              d.fy = d.y;
+          }
+
+          function dragged(d) {
+            d.fx = d3.event.x;
+            d.fy = d3.event.y;
+        }
+
 
     
+    }
+
 }
-
-
 
 // async function drawArc() {
 

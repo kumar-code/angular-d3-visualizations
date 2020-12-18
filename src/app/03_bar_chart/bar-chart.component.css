@@ -1,13 +1,2 @@
-.bar {
-    fill: steelblue;
-}
 
-.bar:hover {
-    fill: brown;
-}
-
-.axis-title {
-    fill: none;
-    stroke: black;
-    stroke-width: 0.5px;
-}
+        .link { stroke: #999; stroke-opacity: .6; stroke-width: 1px; }
